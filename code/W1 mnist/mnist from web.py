@@ -2,11 +2,11 @@
 """
 Created on Thu Aug 10 22:47:18 2023
 
-@author: user
+@author: DavidChou23
 https://hackmd.io/@Maxlight/SkuYB0w6_
 https://www.youtube.com/watch?v=OP5HcXJg2Aw&list=PLJV_el3uVTsMhtt7_Y6sgTHGHp1Vb2P2J&index=10
 """
-
+#import modules
 import torch
 from torch.utils import data as data_
 import torch.nn as nn
@@ -17,9 +17,9 @@ import torchvision
 EPOCH = 10
 BATCH_SIZE = 50
 LR = 0.001
-DOWNLOAD_MNIST = False  #true or false to download mnist data
+DOWNLOAD_MNIST = True  #true or false to download mnist data
 
-
+#mnist
 train_data = torchvision.datasets.MNIST(root = './mnist',train = True,transform = torchvision.transforms.ToTensor(),download = DOWNLOAD_MNIST)
 print(train_data.train_data.size())
 print(train_data.train_labels.size())
@@ -35,7 +35,7 @@ plt.show()
 """
 
 #data loader(iterator)
-train_loader = data_.DataLoader(dataset = train_data, batch_size = BATCH_SIZE, shuffle = True,num_workers = 0)
+train_loader = data_.DataLoader(dataset = train_data, batch_size = BATCH_SIZE, shuffle = True,num_workers = 4)
 test_data = torchvision.datasets.MNIST(root = './mnist/', train = False)
 
 #class inheritance from nn.module
@@ -61,16 +61,21 @@ class CNN(nn.Module):
     output = self.out(x)
     return output, x
 
+#module
 cnn = CNN()
-print(cnn)
+print(cnn) #print module structure
 
 optimization = torch.optim.Adam(cnn.parameters(), lr = LR)
 loss_func = nn.CrossEntropyLoss()
 
+#just for graph
 epoch_l=[i for i in range(1,EPOCH+1,1)]
 accuracy_l=[]
 loss_l=[]
-if __name__=='__main__':
+
+
+#Training
+if __name__=='__main__': #to prevent dataloader's threading Error
     train_x = torch.unsqueeze(test_data.test_data, dim = 1).type(torch.FloatTensor)[:6000]/255.
     train_y = test_data.test_labels[:6000]
 
@@ -102,7 +107,7 @@ print(test_y[:10].numpy(), 'real number')
 
 #save model
 torch.save(cnn.state_dict(), "./cnn")
-
+#export variable
 import pickle
 pickle.dump(accuracy_l, open("accuracy_l.dat",'wb'))
 pickle.dump(loss_l, open("loss_l.dat",'wb'))
@@ -112,7 +117,7 @@ pickle.dump(loss_l, open("loss_l.dat",'wb'))
 cnn1=CNN()
 cnn1.load_state_dict(torch.load("./cnn"))
 cnn1.eval()
-
+#load variable
 import pickle
 accuracy_l=pickle.load(open("./accuracy_l.dat",'rb'))
 loss_l=pickle.load(open("./loss_l.dat",'rb'))
@@ -148,8 +153,9 @@ def show_confusion_matrix(mat):
     figure.show()
 
 
-
+#plot image
 plt.plot(epoch_l,list(map(float,accuracy_l)),'--')
+plt.xlim([])
 plt.plot(epoch_l,list(map(float,loss_l)),'--')
 plt.xlabel("$epoch$")
 plt.ylabel("$percentage$")
@@ -157,4 +163,6 @@ plt.legend(["learning","loss"])
 plt.title("Learning curve& loss curve")
 plt.show()
 
-show_confusion_matrix(confusion_matrix(cnn, test_x, test_y))
+#plot confusion matrix in graph
+matrix=confusion_matrix(cnn, test_x, test_y)
+show_confusion_matrix(matrix)
